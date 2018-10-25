@@ -138,10 +138,13 @@ func (b *Backend) rawClient() (*etcdv3.Client, error) {
 		tlsInfo.KeyFile = v.(string)
 	}
 
-	if tlsCfg, err := tlsInfo.ClientConfig(); err != nil {
-		return nil, err
-	} else if !tlsInfo.Empty() {
-		config.TLS = tlsCfg // Assign TLS configuration only if it valid and non-empty.
+	// If a trusted CA file has been specified, validate and use the TLS configuration.
+	if tlsInfo.TrustedCAFile != "" {
+		if tlsCfg, err := tlsInfo.ClientConfig(); err != nil {
+			return nil, err
+		} else {
+			config.TLS = tlsCfg
+		}
 	}
 
 	return etcdv3.New(config)
